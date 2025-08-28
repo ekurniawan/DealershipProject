@@ -1,13 +1,8 @@
-﻿using DealershipProject.Shared.Models;
+using DealershipProject.Shared.Models;
 using DealershipProject.Shared.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace DealershipProject.Services
+namespace DealershipProject.Web.Client.Services
 {
     public class CarService : ICarService
     {

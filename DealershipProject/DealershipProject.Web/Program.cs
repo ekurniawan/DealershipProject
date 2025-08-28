@@ -12,6 +12,9 @@ builder.Services.AddRazorComponents()
 // Add device-specific services used by the DealershipProject.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+// Register HttpClient and CarService
+builder.Services.AddHttpClient<ICarService, CarService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

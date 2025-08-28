@@ -19,13 +19,16 @@ namespace DealershipProject
             // Add device-specific services used by the DealershipProject.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+            // Register HttpClient and CarService
+            builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddSingleton<ICarService, CarService>();
+
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
 #endif
-            builder.Services.AddSingleton<ICarService, CarService>();
 
 
 
