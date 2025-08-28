@@ -1,0 +1,62 @@
+﻿@page "/cars"
+@using DealershipProject.Shared.Models
+@using DealershipProject.Shared.Services
+@inject ICarService CarService
+@inject NavigationManager Navigation
+
+
+<h3>Cars</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Car Id</th>
+                <th>Model</th>
+                <th>Type</th>
+                <th>Base Price</th>
+                <th>Color</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var car in cars)
+            {
+                <tr>
+                    <td>@car.CarId</td>
+                    <td>@car.Model</td>
+                    <td>@car.Type</td>
+                    <td>@car.BasePrice.ToString("C")</td>
+                    <td>@car.Color</td>
+                    <td>@car.Stock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Car> cars = new List<Car>();
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckAuthenticationAndLoadData();
+    }
+
+    private async Task CheckAuthenticationAndLoadData()
+    {
+        // var token = await AuthService.GetTokenAsync();
+        // isAuthenticated = !string.IsNullOrEmpty(token);
+        // if (isAuthenticated)
+        // {
+        //     cars = await CarService.GetCarsAsync();
+        // }
+        // else
+        // {
+        //     Navigation.NavigateTo("/login");
+        // }
+        cars = await CarService.GetCarsAsync();
+
+    }
+}

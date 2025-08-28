@@ -25,6 +25,9 @@ namespace DealershipProject
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
 #endif
+            builder.Services.AddSingleton<ICarService, CarService>();
+
+
 
             return builder.Build();
         }
