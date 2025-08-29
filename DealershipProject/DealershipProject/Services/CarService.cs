@@ -126,9 +126,19 @@ namespace DealershipProject.Services
             }
         }
 
-        public Task<bool> DeleteCarAsync(int carId)
+        public async Task<bool> DeleteCarAsync(int carId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await SetAuthorizationHeaderAsync();
+                var response = await _httpClient.DeleteAsync($"{BaseUrl}api/cars/{carId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting car {carId}: {ex.Message}");
+                return false;
+            }
         }
     }
 }

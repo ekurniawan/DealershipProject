@@ -1,0 +1,300 @@
+﻿@page "/cars/create"
+@page "/cars/edit/{CarId:int}"
+@using DealershipProject.Shared.Models
+@using DealershipProject.Shared.Services
+@inject ICarService CarService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsEdit ? "Edit Car" : "Create New Car")</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Authentication Required</h4>
+        <p>You need to login to manage cars.</p>
+        <hr>
+        <a class="btn btn-primary" href="/login">Go to Login</a>
+    </div>
+}
+else if (IsEdit && car == null && !isLoading)
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Car Not Found</h4>
+        <p>The car with ID @CarId could not be found.</p>
+        <hr>
+        <a class="btn btn-primary" href="/cars">Back to Cars List</a>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">@(IsEdit ? "Edit Car" : "Create New Car")</h4>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@carModel" OnValidSubmit="@HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger mb-3" />
+
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
+                            <InputText id="model" class="form-control" @bind-Value="carModel.Model" placeholder="e.g., Xpander Sport" />
+                            <ValidationMessage For="@(() => carModel.Model)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+                            <InputSelect id="type" class="form-select" @bind-Value="carModel.Type">
+                                <option value="">Select a type</option>
+                                <option value="Sedan">Sedan</option>
+                                <option value="SUV">SUV</option>
+                                <option value="MPV">MPV</option>
+                                <option value="Hatchback">Hatchback</option>
+                                <option value="Coupe">Coupe</option>
+                                <option value="Convertible">Convertible</option>
+                                <option value="Truck">Truck</option>
+                                <option value="Van">Van</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => carModel.Type)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="basePrice" class="form-label">Base Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <InputNumber id="basePrice" class="form-control" @bind-Value="carModel.BasePrice" placeholder="0.00" step="0.01" />
+                            </div>
+                            <ValidationMessage For="@(() => carModel.BasePrice)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Color <span class="text-danger">*</span></label>
+                            <InputSelect id="color" class="form-select" @bind-Value="carModel.Color">
+                                <option value="">Select a color</option>
+                                <option value="Black">Black</option>
+                                <option value="White">White</option>
+                                <option value="Silver">Silver</option>
+                                <option value="Gray">Gray</option>
+                                <option value="Red">Red</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Green">Green</option>
+                                <option value="Yellow">Yellow</option>
+                                <option value="Orange">Orange</option>
+                                <option value="Brown">Brown</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => carModel.Color)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock <span class="text-danger">*</span></label>
+                            <InputNumber id="stock" class="form-control" @bind-Value="carModel.Stock" placeholder="0" />
+                            <div class="form-text">Number of units available in inventory</div>
+                            <ValidationMessage For="@(() => carModel.Stock)" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="alert alert-success" role="alert">
+                                @successMessage
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
+                                <span class="bi bi-x-circle" aria-hidden="true"></span> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span>@(IsEdit ? "Updating..." : "Creating...")</span>
+                                }
+                                else
+                                {
+                                    <span class="bi bi-check-circle" aria-hidden="true"></span>
+                                    <span>@(IsEdit ? "Update Car" : "Create Car")</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+
+            @if (IsEdit && car != null)
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Current Car Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Model:</small><br />
+                                <strong>@car.Model</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Type:</small><br />
+                                <strong>@car.Type</strong>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Price:</small><br />
+                                <strong>@car.BasePrice.ToString("C0")</strong>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Color:</small><br />
+                                <strong>@car.Color</strong>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Stock:</small><br />
+                                <strong>@car.Stock</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? CarId { get; set; }
+
+    private Car carModel = new();
+    private Car? car; // Original car for editing
+    private bool isAuthenticated = false;
+    private bool isLoading = false;
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private bool IsEdit => CarId.HasValue && CarId.Value > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckAuthenticationAndLoadData();
+    }
+
+    private async Task CheckAuthenticationAndLoadData()
+    {
+        var token = await AuthService.GetTokenAsync();
+        isAuthenticated = !string.IsNullOrEmpty(token);
+
+        if (isAuthenticated && IsEdit)
+        {
+            await LoadCar();
+        }
+        else if (!isAuthenticated)
+        {
+            // Will show authentication required message
+        }
+        else
+        {
+            // Creating new car - initialize with defaults
+            carModel = new Car();
+        }
+    }
+
+    private async Task LoadCar()
+    {
+        try
+        {
+            isLoading = true;
+            car = await CarService.GetCarByIdAsync(CarId!.Value);
+
+            if (car != null)
+            {
+                // Copy data to editable model
+                carModel = new Car
+                {
+                    CarId = car.CarId,
+                    Model = car.Model,
+                    Type = car.Type,
+                    BasePrice = car.BasePrice,
+                    Color = car.Color,
+                    Stock = car.Stock
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading car: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            Car? result = null;
+
+            if (IsEdit)
+            {
+                result = await CarService.UpdateCarAsync(carModel.CarId, carModel);
+                if (result != null)
+                {
+                    successMessage = "Car updated successfully!";
+                    car = result; // Update the current car display
+                }
+                else
+                {
+                    errorMessage = "Failed to update car. Please try again.";
+                }
+            }
+            else
+            {
+                result = await CarService.CreateCarAsync(carModel);
+                if (result != null)
+                {
+                    successMessage = "Car created successfully!";
+                    // Redirect to the cars list after successful creation
+                    await Task.Delay(1500);
+                    Navigation.NavigateTo("/cars");
+                }
+                else
+                {
+                    errorMessage = "Failed to create car. Please try again.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/cars");
+    }
+}

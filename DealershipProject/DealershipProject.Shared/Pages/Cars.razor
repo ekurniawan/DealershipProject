@@ -2,42 +2,229 @@
 @using DealershipProject.Shared.Models
 @using DealershipProject.Shared.Services
 @inject ICarService CarService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 
+<PageTitle>Cars</PageTitle>
 
-<h3>Cars</h3>
-
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Car Id</th>
-                <th>Model</th>
-                <th>Type</th>
-                <th>Base Price</th>
-                <th>Color</th>
-                <th>Stock</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var car in cars)
-            {
-                <tr>
-                    <td>@car.CarId</td>
-                    <td>@car.Model</td>
-                    <td>@car.Type</td>
-                    <td>@car.BasePrice.ToString("C")</td>
-                    <td>@car.Color</td>
-                    <td>@car.Stock</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Cars Inventory</h1>
+    @if (isAuthenticated)
+    {
+        <button class="btn btn-primary" @onclick="() => ShowCreateModal()">
+            <span class="bi bi-plus-circle" aria-hidden="true"></span> Add New Car
+        </button>
+    }
 </div>
 
+@if (!isAuthenticated)
+{
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Authentication Required</h4>
+        <p>You need to login to view the cars inventory.</p>
+        <hr>
+        <a class="btn btn-primary" href="/login">Go to Login</a>
+    </div>
+}
+else if (cars == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!cars.Any())
+{
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">No Data</h4>
+        <p>No cars available or failed to load data. This could be due to:</p>
+        <ul>
+            <li>Invalid or expired token</li>
+            <li>API is not responding</li>
+            <li>Network connectivity issues</li>
+        </ul>
+        <button class="btn btn-secondary" @onclick="RefreshData">Retry</button>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-success fs-6">@cars.Count cars found</span>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="RefreshData">
+            <span class="bi bi-arrow-clockwise" aria-hidden="true"></span> Refresh
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Model</th>
+                    <th>Type</th>
+                    <th>Base Price</th>
+                    <th>Color</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var car in cars)
+                {
+                    <tr>
+                        <td>@car.CarId</td>
+                        <td>@car.Model</td>
+                        <td>@car.Type</td>
+                        <td>@car.BasePrice.ToString("C0")</td>
+                        <td>@car.Color</td>
+                        <td>
+                            <span class="badge @(car.Stock > 0 ? "bg-success" : "bg-danger")">
+                                @car.Stock
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ShowEditModal(car)">
+                                    <span class="bi bi-pencil" aria-hidden="true">edit</span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowDeleteModal(car)">
+                                    <span class="bi bi-trash" aria-hidden="true">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(isEditing ? "Edit Car" : "Add New Car")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@carModel" OnValidSubmit="@HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Model</label>
+                            <InputText id="model" class="form-control" @bind-Value="carModel.Model" />
+                            <ValidationMessage For="@(() => carModel.Model)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <InputText id="type" class="form-control" @bind-Value="carModel.Type" />
+                            <ValidationMessage For="@(() => carModel.Type)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="basePrice" class="form-label">Base Price</label>
+                            <InputNumber id="basePrice" class="form-control" @bind-Value="carModel.BasePrice" />
+                            <ValidationMessage For="@(() => carModel.BasePrice)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <InputText id="color" class="form-control" @bind-Value="carModel.Color" />
+                            <ValidationMessage For="@(() => carModel.Color)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock</label>
+                            <InputNumber id="stock" class="form-control" @bind-Value="carModel.Stock" />
+                            <ValidationMessage For="@(() => carModel.Stock)" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(modalErrorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @modalErrorMessage
+                            </div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <span>@(isEditing ? "Update" : "Create")</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this car?</p>
+                    @if (carToDelete != null)
+                    {
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">@carToDelete.Model</h6>
+                                <p class="card-text">
+                                    <strong>Type:</strong> @carToDelete.Type<br />
+                                    <strong>Price:</strong> @carToDelete.BasePrice.ToString("C0")<br />
+                                    <strong>Color:</strong> @carToDelete.Color<br />
+                                    <strong>Stock:</strong> @carToDelete.Stock
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseDeleteModal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="HandleDelete" disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>Deleting...</span>
+                        }
+                        else
+                        {
+                            <span>Delete</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private List<Car> cars = new List<Car>();
+    private List<Car>? cars;
     private bool isAuthenticated = false;
+    private bool showModal = false;
+    private bool showDeleteModal = false;
+    private bool isEditing = false;
+    private bool isSubmitting = false;
+    private bool isDeleting = false;
+    private Car carModel = new();
+    private Car? carToDelete = null;
+    private string modalErrorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,17 +233,136 @@
 
     private async Task CheckAuthenticationAndLoadData()
     {
-        // var token = await AuthService.GetTokenAsync();
-        // isAuthenticated = !string.IsNullOrEmpty(token);
-        // if (isAuthenticated)
-        // {
-        //     cars = await CarService.GetCarsAsync();
-        // }
-        // else
-        // {
-        //     Navigation.NavigateTo("/login");
-        // }
-        cars = await CarService.GetCarsAsync();
+        var token = await AuthService.GetTokenAsync();
+        isAuthenticated = !string.IsNullOrEmpty(token);
 
+        if (isAuthenticated)
+        {
+            await LoadCars();
+        }
+    }
+
+    private async Task LoadCars()
+    {
+        cars = null; // Show loading
+        StateHasChanged();
+
+        cars = await CarService.GetCarsAsync();
+        StateHasChanged();
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadCars();
+    }
+
+    private void ShowCreateModal()
+    {
+        carModel = new Car();
+        isEditing = false;
+        modalErrorMessage = string.Empty;
+        showModal = true;
+    }
+
+    private void ShowEditModal(Car car)
+    {
+        carModel = new Car
+        {
+            CarId = car.CarId,
+            Model = car.Model,
+            Type = car.Type,
+            BasePrice = car.BasePrice,
+            Color = car.Color,
+            Stock = car.Stock
+        };
+        isEditing = true;
+        modalErrorMessage = string.Empty;
+        showModal = true;
+    }
+
+    private void ShowDeleteModal(Car car)
+    {
+        carToDelete = car;
+        showDeleteModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        modalErrorMessage = string.Empty;
+    }
+
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        carToDelete = null;
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            modalErrorMessage = string.Empty;
+
+            Car? result = null;
+
+            if (isEditing)
+            {
+                result = await CarService.UpdateCarAsync(carModel.CarId, carModel);
+            }
+            else
+            {
+                result = await CarService.CreateCarAsync(carModel);
+            }
+
+            if (result != null)
+            {
+                CloseModal();
+                await LoadCars(); // Refresh the list
+            }
+            else
+            {
+                modalErrorMessage = $"Failed to {(isEditing ? "update" : "create")} car. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            modalErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (carToDelete == null) return;
+
+        try
+        {
+            isDeleting = true;
+            var success = await CarService.DeleteCarAsync(carToDelete.CarId);
+
+            if (success)
+            {
+                CloseDeleteModal();
+                await LoadCars(); // Refresh the list
+            }
+            else
+            {
+                // Handle error - you might want to show an error message
+            }
+        }
+        catch (Exception)
+        {
+            // Handle error
+            CloseDeleteModal();
+        }
+        finally
+        {
+            isDeleting = false;
+        }
     }
 }
