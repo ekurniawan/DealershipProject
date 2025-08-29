@@ -1,5 +1,6 @@
 using DealershipProject.Shared.Models;
 using DealershipProject.Shared.Services;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace DealershipProject.Web.Services
@@ -7,20 +8,29 @@ namespace DealershipProject.Web.Services
     public class CarService : ICarService
     {
         private readonly HttpClient _httpClient;
+        private readonly IAuthService _authService;
         private const string BaseUrl = "https://handsonlabapi20250807134636-gjfahzdkfug4b9cs.indonesiacentral-01.azurewebsites.net/";
 
-        public CarService(HttpClient httpClient)
+        public CarService(HttpClient httpClient, IAuthService authService)
         {
             _httpClient = httpClient;
+            _authService = authService;
+        }
+        private async Task SetAuthorizationHeaderAsync()
+        {
+            _httpClient.DefaultRequestHeaders.Clear();
+            var token = await _authService.GetTokenAsync();
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
         }
 
         public async Task<List<Car>> GetCarsAsync()
         {
             try
             {
-                var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJ1ZGlAZ21haWwuY29tIiwicm9sZSI6WyJzYWxlcyIsImFkbWluIl0sIm5iZiI6MTc1NjM3MzU4MCwiZXhwIjoxNzU2Mzc3MTgwLCJpYXQiOjE3NTYzNzM1ODB9.MjLc-dCbfmn315IJGIcaVwYUsVk8MbaO_5GYoJTHi40";
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await SetAuthorizationHeaderAsync();
 
                 var response = await _httpClient.GetStringAsync($"{BaseUrl}api/cars");
                 var cars = JsonSerializer.Deserialize<List<Car>>(response,

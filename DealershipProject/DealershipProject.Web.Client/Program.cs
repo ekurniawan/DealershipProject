@@ -8,5 +8,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 await builder.Build().RunAsync();
