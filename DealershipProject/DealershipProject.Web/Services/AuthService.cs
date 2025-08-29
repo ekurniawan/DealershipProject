@@ -4,74 +4,42 @@ namespace DealershipProject.Web.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly IHttpContextAccessor _httpContextAssesor;
-        private string? _currentToken;
-        private string? _currentEmail;
-        private HttpContext? context;
+        private readonly UserState _userState;
 
-        public AuthService(IHttpContextAccessor httpContextAccessor)
+        public AuthService(UserState userState)
         {
-            _httpContextAssesor = httpContextAccessor;
-            context = _httpContextAssesor.HttpContext;
+            _userState = userState;
         }
 
-        public bool IsAuthenticated => !string.IsNullOrEmpty(_currentToken);
+        public bool IsAuthenticated => !string.IsNullOrEmpty(_userState.Token);
 
-
-        public async Task ClearTokenAsync()
+        public Task<string?> GetTokenAsync()
         {
-            _currentToken = null;
-            _currentEmail = null;
-
-            if (context?.Session != null)
-            {
-                context.Session.Remove("auth_token");
-                context.Session.Remove("auth_email");
-            }
-            await Task.CompletedTask;
+            return Task.FromResult(_userState.Token);
         }
 
-        public async Task<string?> GetEmailAsync()
+        public Task SetTokenAsync(string token)
         {
-            if (_currentEmail != null)
-                return _currentEmail;
-            if (context?.Session != null)
-            {
-                _currentEmail = context.Session.GetString("auth_email");
-            }
-            return await Task.FromResult(_currentEmail);
+            _userState.Token = token;
+            return Task.CompletedTask;
         }
 
-        public async Task<string?> GetTokenAsync()
+        public Task<string?> GetEmailAsync()
         {
-            if (_currentToken != null)
-                return _currentToken;
-
-            if (context?.Session != null)
-            {
-                _currentToken = context.Session.GetString("auth_token");
-            }
-            return await Task.FromResult(_currentToken);
+            return Task.FromResult(_userState.Email);
         }
 
-        public async Task SetEmailAsync(string email)
+        public Task SetEmailAsync(string email)
         {
-            _currentEmail = email;
-            if (context?.Session != null)
-            {
-                context.Session.SetString("auth_email", email);
-            }
-            await Task.CompletedTask;
+            _userState.Email = email;
+            return Task.CompletedTask;
         }
 
-        public async Task SetTokenAsync(string token)
+        public Task ClearTokenAsync()
         {
-            _currentToken = token;
-            if (context?.Session != null)
-            {
-                context.Session.SetString("auth_token", token);
-            }
-            await Task.CompletedTask;
+            _userState.Token = null;
+            _userState.Email = null;
+            return Task.CompletedTask;
         }
     }
 }

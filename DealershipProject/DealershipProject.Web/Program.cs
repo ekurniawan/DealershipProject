@@ -14,19 +14,11 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
 // Register HttpClient and CarService
 builder.Services.AddHttpClient();
-builder.Services.AddHttpContextAccessor();
-
-//add session support
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
 builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
+
+// Add per-circuit user state for Blazor Server to avoid session usage
+builder.Services.AddScoped<UserState>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
@@ -44,11 +36,7 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
-app.UseSession();
-
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
