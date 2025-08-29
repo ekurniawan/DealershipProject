@@ -22,6 +22,8 @@ namespace DealershipProject
             // Register HttpClient and CarService
             builder.Services.AddSingleton<HttpClient>();
             builder.Services.AddSingleton<ICarService, CarService>();
+            builder.Services.AddSingleton<ILoginService, LoginService>();
+            builder.Services.AddSingleton<IAuthService, AuthService>();
 
             builder.Services.AddMauiBlazorWebView();
 
