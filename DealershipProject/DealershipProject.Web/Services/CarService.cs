@@ -56,5 +56,25 @@ namespace DealershipProject.Web.Services
                 return new List<Car>();
             }
         }
+
+        public Task<Car?> GetCarByIdAsync(int carId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Car?> CreateCarAsync(Car car)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Car?> UpdateCarAsync(int carId, Car car)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteCarAsync(int carId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

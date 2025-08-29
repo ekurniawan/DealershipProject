@@ -20,6 +20,7 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 // Add per-circuit user state for Blazor Server to avoid session usage
 builder.Services.AddScoped<UserState>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthStateService>();
 
 var app = builder.Build();
 

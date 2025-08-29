@@ -24,6 +24,8 @@ namespace DealershipProject
             builder.Services.AddSingleton<ICarService, CarService>();
             builder.Services.AddSingleton<ILoginService, LoginService>();
             builder.Services.AddSingleton<IAuthService, AuthService>();
+            builder.Services.AddSingleton<AuthStateService>();
+
 
             builder.Services.AddMauiBlazorWebView();
 

@@ -1,4 +1,10 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using DealershipProject.Shared.Services
+@inject IAuthService AuthService
+@inject AuthStateService AuthStateService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">DealershipProject</a>
     </div>
@@ -30,11 +36,82 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Cars
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
-            </NavLink>
-        </div>
+        @if (!isAuthenticated)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="register">
+                    <span class="bi bi-person-plus-fill" aria-hidden="true"></span> Register
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="login">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+                </NavLink>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item px-3">
+                <button class="nav-link" @onclick="Logout">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Logout
+                </button>
+            </div>
+        }
     </nav>
 </div>
 
+@code {
+    private bool isAuthenticated = false;
+    private string? userEmail = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthStateService.OnAuthStateChanged += StateHasChanged;
+        await CheckAuthenticationStatus();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            await CheckAuthenticationStatus();
+            StateHasChanged();
+        }
+    }
+
+    private async void OnAuthStateChanged()
+    {
+        await CheckAuthenticationStatus();
+        StateHasChanged();
+    }
+
+    private async Task CheckAuthenticationStatus()
+    {
+        var token = await AuthService.GetTokenAsync();
+        isAuthenticated = !string.IsNullOrEmpty(token);
+        if (isAuthenticated)
+        {
+            userEmail = await AuthService.GetEmailAsync();
+        }
+        else
+        {
+            userEmail = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        AuthStateService.OnAuthStateChanged -= StateHasChanged;
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.ClearTokenAsync();
+        isAuthenticated = false;
+        userEmail = null;
+
+        AuthStateService.NotifyAuthStateChanged();
+
+        Navigation.NavigateTo("login");
+    }
+}

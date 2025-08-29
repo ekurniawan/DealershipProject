@@ -9,6 +9,7 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddSingleton<AuthStateService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 await builder.Build().RunAsync();

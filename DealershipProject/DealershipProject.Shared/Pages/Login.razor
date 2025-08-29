@@ -3,6 +3,7 @@
 @using DealershipProject.Shared.Services
 @inject IAuthService AuthService
 @inject ILoginService LoginService
+@inject AuthStateService AuthStateService
 @inject NavigationManager Navigation
 
 <h3>Login</h3>
@@ -76,6 +77,9 @@
             {
                 await AuthService.SetTokenAsync(response.Token);
                 await AuthService.SetEmailAsync(response.Email);
+
+                AuthStateService.NotifyAuthStateChanged();
+                successMessage = "Login successful! Redirecting...";
                 await Task.Delay(1000); // Simulate a delay for better UX   
                 Navigation.NavigateTo("/cars");
             }

@@ -51,5 +51,84 @@ namespace DealershipProject.Services
                 return new List<Car>();
             }
         }
+
+        public async Task<Car?> GetCarByIdAsync(int carId)
+        {
+
+            try
+            {
+                await SetAuthorizationHeaderAsync();
+                var response = await _httpClient.GetStringAsync($"{BaseUrl}/api/cars/{carId}");
+                var car = JsonSerializer.Deserialize<Car>(response, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return car;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error fetching car {carId}: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<Car?> CreateCarAsync(Car car)
+        {
+            try
+            {
+                await SetAuthorizationHeaderAsync();
+                var json = JsonSerializer.Serialize(car);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{BaseUrl}api/cars", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var createdCar = JsonSerializer.Deserialize<Car>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    return createdCar;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error creating car: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<Car?> UpdateCarAsync(int carId, Car car)
+        {
+            try
+            {
+                await SetAuthorizationHeaderAsync();
+                var json = JsonSerializer.Serialize(car);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PutAsync($"{BaseUrl}api/cars/{carId}", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var updatedCar = JsonSerializer.Deserialize<Car>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    return updatedCar;
+                }
+                return null;
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating car {carId}: {ex.Message}");
+                return null;
+            }
+        }
+
+        public Task<bool> DeleteCarAsync(int carId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
