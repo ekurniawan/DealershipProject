@@ -55,6 +55,15 @@
     private string successMessage = string.Empty;
     private bool isLoading = false;
 
+    protected async override Task OnInitializedAsync()
+    {
+        var token = await AuthService.GetTokenAsync();
+        if (!string.IsNullOrEmpty(token))
+        {
+            Navigation.NavigateTo("/cars");
+        }
+    }
+
     private async Task HandleLogin()
     {
         isLoading = true;

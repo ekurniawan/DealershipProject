@@ -8,10 +8,10 @@ namespace DealershipProject.Shared.Services
 {
     public interface IAuthService
     {
-        Task<string> GetTokenAsync();
+        Task<string?> GetTokenAsync();
         Task SetTokenAsync(string token);
         Task ClearTokenAsync();
-        Task<string> GetEmailAsync();
+        Task<string?> GetEmailAsync();
         Task SetEmailAsync(string email);
         bool IsAuthenticated { get; }
     }

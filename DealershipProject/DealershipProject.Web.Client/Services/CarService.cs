@@ -18,7 +18,7 @@ namespace DealershipProject.Web.Client.Services
         {
             try
             {
-                var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJ1ZGlAZ21haWwuY29tIiwicm9sZSI6WyJzYWxlcyIsImFkbWluIl0sIm5iZiI6MTc1NjM3MzU4MCwiZXhwIjoxNzU2Mzc3MTgwLCJpYXQiOjE3NTYzNzM1ODB9.MjLc-dCbfmn315IJGIcaVwYUsVk8MbaO_5GYoJTHi40";
+                var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJ1ZGlAZ21haWwuY29tIiwicm9sZSI6WyJzYWxlcyIsImFkbWluIl0sIm5iZiI6MTc1NjQzMjk2MCwiZXhwIjoxNzU2NDM2NTYwLCJpYXQiOjE3NTY0MzI5NjB9.mxPIUurlniUvZwlDzBDxkoK1Ks_ehlehXoE4HuSWKI4";
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
