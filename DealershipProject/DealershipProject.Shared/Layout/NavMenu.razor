@@ -66,7 +66,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        AuthStateService.OnAuthStateChanged += StateHasChanged;
+        AuthStateService.OnAuthStateChanged += OnAuthStateChanged;
         await CheckAuthenticationStatus();
     }
 
@@ -101,7 +101,7 @@
 
     public void Dispose()
     {
-        AuthStateService.OnAuthStateChanged -= StateHasChanged;
+        AuthStateService.OnAuthStateChanged -= OnAuthStateChanged;
     }
 
     private async Task Logout()
